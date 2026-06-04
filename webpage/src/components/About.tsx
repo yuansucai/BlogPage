@@ -45,6 +45,10 @@ interface AboutProps {
 }
 
 export function About({ profile }: AboutProps) {
+  const githubLabel = profile.social.github
+    ? `@${profile.social.github.replace(/\/$/, "").split("/").pop()}`
+    : "未填写";
+
   return (
     <section id="about" className="relative py-24 sm:py-32 bg-[#FFFBF5]">
       <div className="max-w-6xl mx-auto px-6">
@@ -76,7 +80,7 @@ export function About({ profile }: AboutProps) {
               <div className="space-y-4 text-stone-600">
                 <div className="flex items-center gap-3">
                   <span className="text-amber-500"><GitHubIcon /></span>
-                  <span>GitHub: <a href={profile.social.github} className="text-amber-500 hover:underline" target="_blank" rel="noopener noreferrer">@jiabei</a></span>
+                  <span>GitHub: <a href={profile.social.github} className="text-amber-500 hover:underline" target="_blank" rel="noopener noreferrer">{githubLabel}</a></span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-orange-500"><EmailIcon /></span>

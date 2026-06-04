@@ -19,6 +19,7 @@ com/webpage/service/ProfileService.class
 com/webpage/controller/ProfileController.class
 com/webpage/controller/ProjectController.class
 com/webpage/interceptor/AuthInterceptor.class
+com/webpage/controller/AdminProfileController.class
 com/webpage/common/ApiResponse.class
 com/webpage/controller/HealthController.class
 com/webpage/repository/UserRepository.class

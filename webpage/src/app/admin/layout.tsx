@@ -2,9 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getLoginStatus, logout, changePassword } from "@/lib/api";
+import {
+  getLoginStatus,
+  logout,
+  changePassword,
+  fetchAdminProfile,
+  updateAdminProfile,
+  Profile,
+} from "@/lib/api";
 import { TextField, InputAdornment, IconButton } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Settings, Visibility, VisibilityOff } from "@mui/icons-material";
+
+const emptyProfile: Profile = {
+  name: "",
+  avatar: "",
+  title: "",
+  bio: "",
+  about: ["", ""],
+  social: {
+    github: "",
+    email: "",
+    juejin: "",
+  },
+  location: "",
+  company: "",
+};
 
 export default function AdminLayout({
   children,
@@ -13,6 +35,7 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPwdModal, setShowPwdModal] = useState(false);
 
   useEffect(() => {
@@ -20,7 +43,7 @@ export default function AdminLayout({
     if (!isLoggedIn) {
       router.push("/login");
     } else {
-      setChecked(true);
+      queueMicrotask(() => setChecked(true));
     }
   }, [router]);
 
@@ -53,6 +76,12 @@ export default function AdminLayout({
               {getLoginStatus().username}
             </span>
             <button
+              onClick={() => setShowProfileModal(true)}
+              className="px-4 py-1.5 text-sm text-stone-500 border border-stone-200 rounded-lg hover:text-stone-800 hover:border-stone-300 transition-all"
+            >
+              编辑主页信息
+            </button>
+            <button
               onClick={() => setShowPwdModal(true)}
               className="px-4 py-1.5 text-sm text-stone-500 border border-stone-200 rounded-lg hover:text-stone-800 hover:border-stone-300 transition-all"
             >
@@ -71,6 +100,11 @@ export default function AdminLayout({
       {/* 页面内容 */}
       <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
 
+      {/* 主页信息编辑弹窗 */}
+      {showProfileModal && (
+        <ProfileInfoModal onClose={() => setShowProfileModal(false)} />
+      )}
+
       {/* 修改密码弹窗 */}
       {showPwdModal && (
         <ChangePasswordModal onClose={() => setShowPwdModal(false)} />
@@ -85,6 +119,231 @@ const lightTextFieldSx = {
     color: "#2D2A26",
   },
 };
+
+function ProfileInfoModal({ onClose }: { onClose: () => void }) {
+  const [profileForm, setProfileForm] = useState<Profile>(emptyProfile);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    fetchAdminProfile()
+      .then((profile) => {
+        if (!active) return;
+        setProfileForm({
+          ...emptyProfile,
+          ...profile,
+          about: profile.about?.length ? profile.about : ["", ""],
+          social: {
+            ...emptyProfile.social,
+            ...profile.social,
+          },
+        });
+      })
+      .catch((err) => {
+        if (!active) return;
+        const message = err instanceof Error ? err.message : "个人信息加载失败";
+        setError(message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const updateProfileField = (field: keyof Profile, value: string) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateSocialField = (field: string, value: string) => {
+    setProfileForm((prev) => ({
+      ...prev,
+      social: { ...prev.social, [field]: value },
+    }));
+  };
+
+  const updateAboutField = (index: number, value: string) => {
+    setProfileForm((prev) => {
+      const about = [...prev.about];
+      about[index] = value;
+      return { ...prev, about };
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!profileForm.name.trim()) {
+      setError("姓名不能为空");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const savedProfile = await updateAdminProfile({
+        ...profileForm,
+        about: profileForm.about.map((item) => item.trim()).filter(Boolean),
+      });
+      setProfileForm({
+        ...emptyProfile,
+        ...savedProfile,
+        about: savedProfile.about?.length ? savedProfile.about : ["", ""],
+        social: {
+          ...emptyProfile.social,
+          ...savedProfile.social,
+        },
+      });
+      setSuccess("主页信息已保存");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "主页信息保存失败";
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div
+        className="absolute inset-0 bg-stone-900/20 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white shadow-lg border border-stone-200 rounded-2xl p-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-stone-800">编辑主页信息</h2>
+          <p className="mt-2 text-sm text-stone-500">
+            保存后会更新首页个人介绍、关于我和联系方式。
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-500 text-sm">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
+            {success}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="py-8 text-stone-400">加载中...</div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextField
+                label="姓名"
+                value={profileForm.name}
+                onChange={(e) => updateProfileField("name", e.target.value)}
+                fullWidth
+                required
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="头衔"
+                value={profileForm.title}
+                onChange={(e) => updateProfileField("title", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="一句话简介"
+                value={profileForm.bio}
+                onChange={(e) => updateProfileField("bio", e.target.value)}
+                fullWidth
+                multiline
+                rows={3}
+                sx={{
+                  ...lightTextFieldSx,
+                  gridColumn: { xs: "auto", md: "1 / -1" },
+                }}
+              />
+              <TextField
+                label="关于我 - 第 1 段"
+                value={profileForm.about[0] || ""}
+                onChange={(e) => updateAboutField(0, e.target.value)}
+                fullWidth
+                multiline
+                rows={3}
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="关于我 - 第 2 段"
+                value={profileForm.about[1] || ""}
+                onChange={(e) => updateAboutField(1, e.target.value)}
+                fullWidth
+                multiline
+                rows={3}
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="GitHub 链接"
+                value={profileForm.social.github || ""}
+                onChange={(e) => updateSocialField("github", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="掘金链接"
+                value={profileForm.social.juejin || ""}
+                onChange={(e) => updateSocialField("juejin", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="邮箱"
+                value={profileForm.social.email || ""}
+                onChange={(e) => updateSocialField("email", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="位置"
+                value={profileForm.location}
+                onChange={(e) => updateProfileField("location", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+              <TextField
+                label="公司"
+                value={profileForm.company}
+                onChange={(e) => updateProfileField("company", e.target.value)}
+                fullWidth
+                sx={lightTextFieldSx}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-8">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 text-stone-500 border border-stone-200 rounded-lg hover:text-stone-800 hover:border-stone-300 transition-all"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 transition-all"
+              >
+                {saving ? "保存中..." : "保存信息"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function PasswordField({
   label,
@@ -162,8 +421,9 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setError(err.message || "修改失败");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "修改失败";
+      setError(message);
     } finally {
       setLoading(false);
     }

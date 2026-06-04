@@ -3,7 +3,7 @@
  * 封装 fetch 请求，统一处理后端 ApiResponse 格式
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 interface ApiResponse<T> {
   code: number;
@@ -11,7 +11,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-interface Profile {
+export interface Profile {
   name: string;
   avatar: string;
   title: string;
@@ -221,6 +221,14 @@ export async function updateAdminArticle(id: number, article: Omit<Article, "id"
 
 export async function deleteAdminArticle(id: number) {
   return fetchApiAuthMethod<string>(`/api/admin/articles/${id}`, "DELETE");
+}
+
+export async function fetchAdminProfile() {
+  return fetchApiAuth<Profile>("/api/admin/profile");
+}
+
+export async function updateAdminProfile(profile: Profile) {
+  return fetchApiAuthMethod<Profile>("/api/admin/profile", "PUT", profile);
 }
 
 export async function uploadAdminImage(file: File) {
