@@ -74,7 +74,7 @@ export function Navbar() {
               <span className="bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">J</span>
             </span>
             <span className="text-base bg-gradient-to-r from-amber-600 via-orange-400 to-orange-500 bg-clip-text text-transparent">
-              加贝
+              嘟嘟嘟
             </span>
           </a>
           <div className="hidden md:flex items-center gap-1">

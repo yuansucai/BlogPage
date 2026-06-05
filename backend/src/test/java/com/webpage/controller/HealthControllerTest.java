@@ -32,7 +32,7 @@ class HealthControllerTest {
         mockMvc.perform(get("/api/profile"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(200))
-            .andExpect(jsonPath("$.data.name").value("程序员加贝"));
+            .andExpect(jsonPath("$.data.name").value("程序员嘟嘟嘟"));
     }
 
     @Test

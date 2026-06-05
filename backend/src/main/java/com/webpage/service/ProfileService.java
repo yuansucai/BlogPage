@@ -51,7 +51,7 @@ public class ProfileService {
 
     private Profile createDefaultProfile() {
         Profile profile = new Profile();
-        profile.setName("程序员加贝");
+        profile.setName("程序员嘟嘟嘟");
         profile.setAvatar("/avatar.svg");
         profile.setTitle("前端工程师");
         profile.setBio("热爱技术，专注于 Web 全栈开发。擅长 React、Next.js、Node.js 生态，热衷于用代码创造有价值的工具和产品。相信技术改变世界，开源让技术更美好。");

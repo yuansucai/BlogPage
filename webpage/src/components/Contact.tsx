@@ -132,7 +132,7 @@ export function Footer({ socialLinks }: FooterProps) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-lg bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent font-bold">
-              加贝
+              嘟嘟嘟
             </span>
             <span className="text-stone-400 text-sm">
               &copy; {new Date().getFullYear()}

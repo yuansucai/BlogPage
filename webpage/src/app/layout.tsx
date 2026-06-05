@@ -3,9 +3,9 @@ import "./globals.css";
 import ClientProviders from "./ClientProviders";
 
 export const metadata: Metadata = {
-  title: "程序员加贝 | 全栈工程师",
-  description: "程序员加贝的个人网站 - 全栈工程师，专注于 React、Next.js、TypeScript 技术栈，热衷于用代码创造有价值的工具和产品。",
-  keywords: ["程序员加贝", "全栈工程师", "Next.js", "React", "TypeScript", "Web 开发"],
+  title: "程序员嘟嘟嘟 | 全栈工程师",
+  description: "程序员嘟嘟嘟的个人网站 - 全栈工程师，专注于 React、Next.js、TypeScript 技术栈，热衷于用代码创造有价值的工具和产品。",
+  keywords: ["程序员嘟嘟嘟", "全栈工程师", "Next.js", "React", "TypeScript", "Web 开发"],
 };
 
 export default function RootLayout({
