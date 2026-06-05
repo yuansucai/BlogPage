@@ -29,8 +29,28 @@ mvn spring-boot:run
 | `/api/projects` | GET | 获取项目列表 |
 | `/api/projects?category=AI 应用` | GET | 按分类筛选项目 |
 | `/api/articles` | GET | 获取文章列表 |
-| `/api/articles?type=article` | GET | 按类型筛选文章 |
+| `/api/articles?type=travel` | GET | 按类型筛选旅行文章 |
+| `/api/articles?type=tech` | GET | 按类型筛选技术文章 |
 | `/api/techstack` | GET | 获取技术栈 |
+
+## 部署配置
+
+数据库连接支持用环境变量覆盖，避免服务器上的账号密码写进 Git：
+
+```bash
+DB_URL=jdbc:mysql://localhost:3306/webpage?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+DB_USERNAME=webpage_user
+DB_PASSWORD=your_password
+```
+
+服务器部署时建议把这些变量放在 `/etc/blogpage-backend.env`，并在启动后端前加载：
+
+```bash
+set -a
+source /etc/blogpage-backend.env
+set +a
+java -jar target/webpage-backend-1.0.0.jar
+```
 
 ## 响应格式
 
