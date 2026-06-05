@@ -10,8 +10,14 @@ import {
   updateAdminProfile,
   Profile,
 } from "@/lib/api";
-import { TextField, InputAdornment, IconButton } from "@mui/material";
-import { Settings, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Alert,
+  IconButton,
+  InputAdornment,
+  Snackbar,
+  TextField,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const emptyProfile: Profile = {
   name: "",
@@ -37,6 +43,11 @@ export default function AdminLayout({
   const [checked, setChecked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPwdModal, setShowPwdModal] = useState(false);
+  const [message, setMessage] = useState({
+    open: false,
+    text: "",
+    severity: "success" as "success" | "error",
+  });
 
   useEffect(() => {
     const { isLoggedIn } = getLoginStatus();
@@ -102,13 +113,38 @@ export default function AdminLayout({
 
       {/* 主页信息编辑弹窗 */}
       {showProfileModal && (
-        <ProfileInfoModal onClose={() => setShowProfileModal(false)} />
+        <ProfileInfoModal
+          onClose={() => setShowProfileModal(false)}
+          onSaved={() => {
+            setShowProfileModal(false);
+            setMessage({
+              open: true,
+              text: "主页信息已保存",
+              severity: "success",
+            });
+          }}
+        />
       )}
 
       {/* 修改密码弹窗 */}
       {showPwdModal && (
         <ChangePasswordModal onClose={() => setShowPwdModal(false)} />
       )}
+
+      <Snackbar
+        open={message.open}
+        autoHideDuration={3000}
+        onClose={() => setMessage((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity={message.severity}
+          onClose={() => setMessage((prev) => ({ ...prev, open: false }))}
+          sx={{ width: "100%" }}
+        >
+          {message.text}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
@@ -120,12 +156,17 @@ const lightTextFieldSx = {
   },
 };
 
-function ProfileInfoModal({ onClose }: { onClose: () => void }) {
+function ProfileInfoModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [profileForm, setProfileForm] = useState<Profile>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -179,7 +220,6 @@ function ProfileInfoModal({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (!profileForm.name.trim()) {
       setError("姓名不能为空");
@@ -188,20 +228,11 @@ function ProfileInfoModal({ onClose }: { onClose: () => void }) {
 
     setSaving(true);
     try {
-      const savedProfile = await updateAdminProfile({
+      await updateAdminProfile({
         ...profileForm,
         about: profileForm.about.map((item) => item.trim()).filter(Boolean),
       });
-      setProfileForm({
-        ...emptyProfile,
-        ...savedProfile,
-        about: savedProfile.about?.length ? savedProfile.about : ["", ""],
-        social: {
-          ...emptyProfile.social,
-          ...savedProfile.social,
-        },
-      });
-      setSuccess("主页信息已保存");
+      onSaved();
     } catch (err) {
       const message = err instanceof Error ? err.message : "主页信息保存失败";
       setError(message);
@@ -227,11 +258,6 @@ function ProfileInfoModal({ onClose }: { onClose: () => void }) {
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-500 text-sm">
             {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-            {success}
           </div>
         )}
 
